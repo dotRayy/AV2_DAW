@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Alterar Sala de Prova</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css.css">
+    <style>
+        #content h1 {
+            text-align: center;
+        }
+
+        #formAlterarSala, #formAlterarSalaCandidato {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #formAlterarSala label, #formAlterarSalaCandidato label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #formAlterarSala input, #formAlterarSalaCandidato select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        #formAlterarSala button, #formAlterarSalaCandidato button {
+            background-color: #4c5baf;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #formAlterarSala button:hover, #formAlterarSalaCandidato button:hover {
+            background-color: #333;
+        }
+
+        #tabelaCandidato {
+            max-width: 600px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #tabelaCandidato th, #tabelaCandidato td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #tabelaCandidato th {
+            background-color: #4c5baf;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        Sistema KeyFalls
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="listarCandidatos.html">Listar Candidatos</a>
+        <a href="incluirFiscal.html">Incluir Fiscal</a>
+        <a href="alterarSala.html">Alterar Sala de Prova</a>
+    </nav>
+
+    <div id="content">
+        <h1>Alterar Sala de Prova</h1>
+
+        <form id="formAlterarSala">
+            <label for="idCandidato">ID do Candidato:</label>
+            <input type="text" id="idCandidato" name="idCandidato" required>
+            <button type="button" onclick="buscarCandidato()">Buscar Candidato</button>
+        </form>
+
+        <table id="tabelaCandidato">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Identidade</th>
+                    <th>Email</th>
+                    <th>Cargo Pretendido</th>
+                    <th>Sala Atual</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabela">
+            </tbody>
+        </table>
+
+        <form id="formAlterarSalaCandidato">
+            <label for="novaSala">Nova Sala de Prova:</label>
+            <select id="novaSala" name="novaSala">
+                <option value="1">Sala 1</option>
+                <option value="2">Sala 2</option>
+                <option value="3">Sala 3</option>
+            </select>
+            <button type="button" onclick="alterarSalaCandidato()">Alterar Sala</button>
+        </form>
+    </div>
+
+    <script>
+        function obterParametroUrl(nome) {
+            const urlSearchParams = new URLSearchParams(window.location.search);
+            return urlSearchParams.get(nome);
+        }
+
+        document.getElementById('idCandidato').value = obterParametroUrl('candidatoId');
+        buscarCandidato();
+
+        function buscarCandidato() {
+            var idCandidato = document.getElementById('idCandidato').value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);
+
+                    if (response.status === 'success') {
+                        var candidato = response.candidato;
+                        atualizarTabelaCandidato(candidato);
+
+                        if (parseInt(candidato.sala_de_prova) >= 50) {
+                            alert('A sala atual já atingiu o limite máximo de 50 candidatos.');
+                            document.getElementById('novaSala').disabled = true; 
+                        } else {
+                            document.getElementById('novaSala').disabled = false;
+                        }
+                    } else {
+                        alert('Candidato não encontrado');
+                    }
+                }
+            };
+
+            xhr.open('POST', 'alterarSala.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send('idCandidato=' + idCandidato);
+        }
+
+        function alterarSalaCandidato() {
+            var idCandidato = document.getElementById('idCandidato').value;
+            var novaSala = document.getElementById('novaSala').value;
+
+            if (parseInt(novaSala) >= 50) {
+                alert('A nova sala atingiu o limite máximo de 50 candidatos.');
+                return;
+            }
+
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var response = JSON.parse(xhr.responseText);
+
+                    if (response.status === 'success') {
+                        alert('Sala do candidato alterada com sucesso!');
+                        limparTabelaCandidato();
+                    } else {
+                        alert('Erro ao alterar sala do candidato: ' + response.message);
+                    }
+                }
+            };
+
+            xhr.open('POST', 'alterarSala.php', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send('idCandidatoAlterarSala=' + idCandidato + '&novaSala=' + novaSala);
+        }
+
+        function atualizarTabelaCandidato(candidato) {
+            var corpoTabela = document.getElementById('corpoTabela');
+            corpoTabela.innerHTML = `
+                <tr>
+                    <td>${candidato.id}</td>
+                    <td>${candidato.nome}</td>
+                    <td>${candidato.cpf}</td>
+                    <td>${candidato.identidade}</td>
+                    <td>${candidato.email}</td>
+                    <td>${candidato.cargo_pretendido}</td>
+                    <td>${candidato.sala_de_prova}</td>
+                </tr>
+            `;
+        }
+
+        function limparTabelaCandidato() {
+            var corpoTabela = document.getElementById('corpoTabela');
+            corpoTabela.innerHTML = '';
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Listar Candidatos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        h1{
+            text-align: center;
+        }
+
+        #content {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #content label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #content select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        #content button {
+            background-color: #4c5baf;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #content button:hover {
+            background-color: #333;
+        }
+
+        #selectSala {
+            margin-right: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .alterar-sala-btn {
+            cursor: pointer;
+            color: #007bff;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        Sistema KeyFalls
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="listarCandidatos.html">Listar Candidatos</a>
+        <a href="incluirFiscal.html">Incluir Fiscal</a>
+        <a href="alterarSala.html">Alterar Sala de Prova</a>
+    </nav>
+    <h1>Listar Candidatos</h1>
+    <div id="content">
+        
+        <label for="selectSala">Selecionar Sala:</label>
+        <select id="selectSala">
+            <option value="1">Sala 1</option>
+            <option value="2">Sala 2</option>
+            <option value="3">Sala 3</option>
+        </select>
+
+        <button id="btnCarregarCandidatos" onclick="carregarCandidatos()">Carregar Candidatos</button>
+    </div>
+    <div id="lista-candidatos"></div>
+
+    <script>
+        function carregarCandidatos() {
+            var selectedSala = document.getElementById('selectSala').value;
+            var xhr = new XMLHttpRequest();
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data.length > 0) {
+                        var tabelaCandidatos = '<table>';
+                        tabelaCandidatos += '<tr><th>Nome</th><th>CPF</th><th>Identidade</th><th>Email</th><th>Cargo Pretendido</th><th>Sala de Prova</th><th>Ações</th></tr>';
+
+                        for (var i = 0; i < data.length; i++) {
+                            tabelaCandidatos += '<tr>';
+                            tabelaCandidatos += '<td>' + data[i].nome + '</td>';
+                            tabelaCandidatos += '<td>' + data[i].cpf + '</td>';
+                            tabelaCandidatos += '<td>' + data[i].identidade + '</td>';
+                            tabelaCandidatos += '<td>' + data[i].email + '</td>';
+                            tabelaCandidatos += '<td>' + data[i].cargo_pretendido + '</td>';
+                            tabelaCandidatos += '<td>' + data[i].sala_de_prova + '</td>';
+                            tabelaCandidatos += '<td><span class="alterar-sala-btn" onclick="redirecionarAlterarSala(' + data[i].id + ')">Alterar Sala</span></td>';
+                            tabelaCandidatos += '</tr>';
+                        }
+
+                        tabelaCandidatos += '</table>';
+                        document.getElementById('lista-candidatos').innerHTML = tabelaCandidatos;
+                    } else {
+                        document.getElementById('lista-candidatos').innerHTML = 'Nenhum candidato encontrado para a Sala ' + selectedSala;
+                    }
+                }
+            };
+            xhr.open('GET', 'listarCandidatos.php?sala=' + selectedSala, true);
+            xhr.send();
+        }
+
+        function redirecionarAlterarSala(candidatoId) {
+            window.location.href = 'alterarSala.html?candidatoId=' + candidatoId;
+        }
+    </script>
+
+</body>
+</html>
